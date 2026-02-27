@@ -1,0 +1,38 @@
+name: Coklu Platform Derleme
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  workflow_dispatch: # Manuel baslatma tusu ekler
+
+jobs:
+  build:
+    name: Derleme - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Kodu Cek
+        uses: actions/checkout@v4
+
+      - name: Linux Bagimliliklarini Kur
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libx11-dev
+
+      - name: Rust Kur
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Derle (Release)
+        run: cargo build --release
+
+      - name: Dosyalari Hazirla (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: enginesound-${{ matrix.os }}
+          path: |
+            target/release/enginesound
+            target/release/enginesound.exe
